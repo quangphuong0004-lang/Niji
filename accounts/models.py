@@ -11,6 +11,7 @@ class User(AbstractUser):
     date_of_birth = models.DateField(null=True, blank=True)
     last_active = models.DateTimeField(default=timezone.now)
     is_verified = models.BooleanField(default=True)
+    email = models.EmailField()
     
     class Meta:
         db_table = "accounts_user" 
