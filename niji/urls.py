@@ -5,6 +5,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    #api url
     path('api/auth/', include('accounts.urls'))
 ]
 
