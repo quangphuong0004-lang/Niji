@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import status, permissions
-from .serializers import RegisterSerializer, UserSerializer
+from .serializers import RegisterSerializer, UserSerializer, UpdateProfileSerializer
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .models import User
@@ -37,11 +37,19 @@ class UserProfileView(APIView):
 class UpdateProfileView(APIView):
     permission_classes = [IsAuthenticated]
     
-    def put(self, request):
-        serializer = UserSerializer(
-            request.user, data=request.data, 
-            partial = True, context={'request': request})
+    def patch(self, request):
+        serializer = UpdateProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True
+        )
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(
+                UserSerializer(
+                    request.user,
+                    context={'request': request}
+                ).data,
+                status=status.HTTP_200_OK
+            )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
