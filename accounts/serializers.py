@@ -1,6 +1,7 @@
 from rest_framework import serializers 
 from .models import User
 from django.contrib.auth.password_validation import validate_password
+from socials.models import Follow
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, validators=[validate_password])
@@ -27,6 +28,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     avatar_url = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+    followers_count = serializers.SerializerMethodField()
+    following_count = serializers.SerializerMethodField()
+    is_self = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -40,6 +45,10 @@ class UserSerializer(serializers.ModelSerializer):
             'last_active',
             'is_verified',
             'date_joined',
+            'is_following',
+            'followers_count',
+            'following_count',
+            'is_self',
         ]
 
     def get_avatar_url(self, obj):
@@ -47,6 +56,26 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.avatar and request:
             return request.build_absolute_uri(obj.avatar.url)
         return None
+    
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if not request or request.user.is_anonymous:
+            return False
+
+        return Follow.objects.filter(
+            follower=request.user,
+            following=obj
+        ).exists()
+    
+    def get_followers_count(self, obj):
+        return Follow.objects.filter(following=obj).count()
+
+    def get_following_count(self, obj):
+        return Follow.objects.filter(follower=obj).count()
+    
+    def get_is_self(self, obj):
+        request = self.context.get("request")
+        return request.user == obj
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:

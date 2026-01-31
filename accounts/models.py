@@ -4,14 +4,16 @@ from django.utils import timezone
 
 
 class User(AbstractUser):
-    full_name = models.CharField(max_length=255, blank=True, null=True)
-    phone = models.CharField(max_length=15, unique=True, null=True, blank=True)
+    full_name = models.CharField(max_length=50, blank=True, null=True)
+    phone = models.CharField(max_length=12, unique=True, null=True, blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     bio = models.TextField(blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     last_active = models.DateTimeField(default=timezone.now)
     is_verified = models.BooleanField(default=True)
     email = models.EmailField()
+    # followers_count = models.PositiveIntegerField(default=0)
+    # following_count = models.PositiveIntegerField(default=0)
     
     class Meta:
         db_table = "accounts_user" 

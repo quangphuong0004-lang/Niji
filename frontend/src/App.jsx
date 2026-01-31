@@ -5,18 +5,22 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/Edit_profile";
+import SearchPage from "./pages/SearchPage";
 
 import ProtectedRoute from "./router/ProtectedRoute";
 import MainLayout from "./layouts/MainLayout";
+import FollowersPage from "./pages/FollowersPage";
+import FollowingPage from "./pages/FollowingPage";
+
 
 function App() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
-      {/* Protected routes + Layout */}
+      {/* Protected + Layout */}
       <Route
         element={
           <ProtectedRoute>
@@ -27,9 +31,12 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/profile/edit" element={<EditProfile />} />
+        <Route path="/search" element={<SearchPage />} />
+        <Route path="/users/:username" element={<Profile />} />
+        <Route path="/followers/:username" element={<FollowersPage />} />
+        <Route path="/following/:username" element={<FollowingPage />} />
       </Route>
 
-      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
