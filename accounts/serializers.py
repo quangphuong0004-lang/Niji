@@ -1,4 +1,5 @@
-from rest_framework import serializers 
+from rest_framework import serializers
+from posts.models import Post 
 from .models import User
 from django.contrib.auth.password_validation import validate_password
 from socials.models import Follow
@@ -32,6 +33,7 @@ class UserSerializer(serializers.ModelSerializer):
     followers_count = serializers.SerializerMethodField()
     following_count = serializers.SerializerMethodField()
     is_self = serializers.SerializerMethodField()
+    post_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -49,6 +51,7 @@ class UserSerializer(serializers.ModelSerializer):
             'followers_count',
             'following_count',
             'is_self',
+            'post_count',
         ]
 
     def get_avatar_url(self, obj):
@@ -76,6 +79,9 @@ class UserSerializer(serializers.ModelSerializer):
     def get_is_self(self, obj):
         request = self.context.get("request")
         return request.user == obj
+    
+    def get_post_count(self, obj):
+        return Post.objects.filter(author=obj).count()
 
 class UpdateProfileSerializer(serializers.ModelSerializer):
     class Meta:

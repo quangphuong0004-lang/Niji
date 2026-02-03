@@ -12,8 +12,6 @@ class User(AbstractUser):
     last_active = models.DateTimeField(default=timezone.now)
     is_verified = models.BooleanField(default=True)
     email = models.EmailField()
-    # followers_count = models.PositiveIntegerField(default=0)
-    # following_count = models.PositiveIntegerField(default=0)
     
     class Meta:
         db_table = "accounts_user" 

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Follow, FriendRequest
+from .models import Follow
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -24,8 +24,3 @@ class FollowSerializer(serializers.ModelSerializer):
     class Meta:
         model = Follow
         fields = ['id', 'follower', 'following', 'created_at']
-
-class FriendRequestSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = FriendRequest
-        fields = ['id', 'sender', 'receiver', 'status', 'created_at']

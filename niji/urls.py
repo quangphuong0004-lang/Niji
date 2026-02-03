@@ -9,6 +9,7 @@ urlpatterns = [
     #api url
     path('api/auth/', include('accounts.urls')),
     path('api/social/', include('socials.urls')),
+    path('api/posts/', include('posts.urls')),
 ]
 
 if settings.DEBUG:

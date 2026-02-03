@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../services/api";
 import defaultAvatar from "../assets/default_avt.jpg";
+import PostItem from "../components/PostItem";
+
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -12,6 +14,17 @@ export default function Profile() {
   const { username } = useParams();
 
   const isOwnProfile = user?.is_self;
+  const [posts, setPosts] = useState([]);
+
+  const loadUserPosts = async (usernameValue) => {
+    try {
+      const res = await api.get(`posts/user/${usernameValue}/`);
+      setPosts(res.data);
+    } catch (err) {
+      console.error("Lỗi load bài viết", err);
+    }
+  };
+
 
   const loadProfile = async () => {
     try {
@@ -20,6 +33,7 @@ export default function Profile() {
 
       setUser(res.data);
       setIsFollowing(res.data.is_following ?? false);
+      loadUserPosts(res.data.username);
     } catch {
       alert("Không tìm thấy người dùng");
     }
@@ -130,7 +144,18 @@ export default function Profile() {
       {/* Content */}
       <div style={styles.content}>
         <h3>Bài viết</h3>
-        <p style={{ color: "#777" }}>Chưa có bài viết nào.</p>
+
+        {posts.length === 0 ? (
+          <p style={{ color: "#777" }}>Chưa có bài viết nào.</p>
+        ) : (
+          posts.map((post) => (
+            <PostItem
+              key={post.id}
+              post={post}
+              defaultShowComments={false}
+            />
+          ))
+        )}
       </div>
     </div>
   );

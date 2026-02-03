@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function Sidebar() {
+export default function Sidebar({ onCreate }) {
   const [active, setActive] = useState("home");
   const navigate = useNavigate();
 
@@ -20,7 +20,12 @@ export default function Sidebar() {
           key={item.key}
           onClick={() => {
             setActive(item.key);
-            navigate(item.path);
+
+            if (item.key === "create") {
+              onCreate?.();
+            } else {
+              navigate(item.path);
+            }
           }}
           style={{
             ...styles.menuItem,

@@ -1,10 +1,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.db.models import Q, F
+from django.db.models import Q
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .models import Follow, FriendRequest
-from .serializers import UserPublicSerializer, FollowSerializer, FriendRequestSerializer
+from .models import Follow
+from .serializers import UserPublicSerializer, FollowSerializer
 from django.contrib.auth import get_user_model
 
 User = get_user_model()

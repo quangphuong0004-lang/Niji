@@ -11,6 +11,8 @@ import ProtectedRoute from "./router/ProtectedRoute";
 import MainLayout from "./layouts/MainLayout";
 import FollowersPage from "./pages/FollowersPage";
 import FollowingPage from "./pages/FollowingPage";
+import CreatePost from "./pages/CreatePost";
+import PostDetailPage from "./pages/PostDetailPage";
 
 
 function App() {
@@ -35,6 +37,8 @@ function App() {
         <Route path="/users/:username" element={<Profile />} />
         <Route path="/followers/:username" element={<FollowersPage />} />
         <Route path="/following/:username" element={<FollowingPage />} />
+        <Route path="/create" element={<CreatePost />} />
+        <Route path="/posts/:id" element={<PostDetailPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />
