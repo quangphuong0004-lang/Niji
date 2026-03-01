@@ -9,6 +9,23 @@ export default function PostDetailPage() {
   const [post, setPost] = useState(null);
   const [comment, setComment] = useState("");
 
+
+  const handleDeleteComment = (commentId) => {
+    const removeRecursive = (list) =>
+      list
+        .filter(c => c.id !== commentId)
+        .map(c => ({
+          ...c,
+          replies: removeRecursive(c.replies || [])
+        }));
+
+    setPost(prev => ({
+      ...prev,
+      comments: removeRecursive(prev.comments),
+    }));
+  };
+
+
   useEffect(() => {
     api.get(`/posts/${id}/`)
       .then(res => setPost(res.data))
@@ -78,7 +95,11 @@ export default function PostDetailPage() {
 
         {/* ===== Scrollable content ===== */}
         <div style={modalBody}>
-          <PostItem post={post} defaultShowComments />
+          <PostItem
+            post={post}
+            defaultShowComments
+            onDeleteComment={handleDeleteComment}
+          />
         </div>
 
         {/* ===== Fixed comment input ===== */}

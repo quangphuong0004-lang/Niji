@@ -31,6 +31,7 @@ class PostImageSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     replies = serializers.SerializerMethodField()
+    is_owner = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
@@ -41,6 +42,7 @@ class CommentSerializer(serializers.ModelSerializer):
             "created_at",
             "parent",
             "replies",
+            'is_owner',
         ]
 
     def get_user(self, obj):
@@ -58,6 +60,10 @@ class CommentSerializer(serializers.ModelSerializer):
             many=True,
             context={"request": request}
         ).data
+        
+    def get_is_owner(self, obj):
+        request = self.context.get("request")
+        return request and request.user == obj.user
 
     
 class PostSerializer(serializers.ModelSerializer):

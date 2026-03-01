@@ -5,7 +5,6 @@ import defaultAvatar from "../assets/default_avt.jpg";
 import { useNavigate } from "react-router-dom";
 import EditPostModal from "../pages/EditPostModal";
 
-/* ===== Time ago helper ===== */
 function timeAgo(dateString) {
   const now = new Date();
   const past = new Date(dateString);
@@ -21,10 +20,7 @@ function timeAgo(dateString) {
   if (hours < 24) return `${hours} giờ trước`;
 
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} ngày trước`;
-
-  const weeks = Math.floor(days / 7);
-  if (weeks < 4) return `${weeks} tuần trước`;
+  if (days < 30) return `${days} ngày trước`;
 
   const months = Math.floor(days / 30);
   if (months < 12) return `${months} tháng trước`;
@@ -33,30 +29,25 @@ function timeAgo(dateString) {
   return `${years} năm trước`;
 }
 
-export default function PostItem({ post, defaultShowComments = false }) {
+export default function PostItem({ post, defaultShowComments = false, onDeleteComment }) {
   const navigate = useNavigate();
 
   const [likes, setLikes] = useState(post.likes_count);
   const [liked, setLiked] = useState(post.is_liked);
   const [showComments, setShowComments] = useState(defaultShowComments);
-
   const [showMenu, setShowMenu] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editContent, setEditContent] = useState(post.content);
 
-  /* ===== Navigation ===== */
-  const goToProfile = () => {
-    navigate(`/users/${post.author.username}`);
-  };
+  const goToProfile = () => navigate(`/users/${post.author.username}`);
 
   const openDetail = () => {
+    sessionStorage.setItem("home_scroll_pos", window.scrollY.toString());
     navigate(`/posts/${post.id}`);
   };
 
-  /* ===== Like ===== */
   const handleLike = async (e) => {
     e.stopPropagation();
-
     try {
       setLiked((prev) => !prev);
       setLikes((prev) => (liked ? prev - 1 : prev + 1));
@@ -68,10 +59,8 @@ export default function PostItem({ post, defaultShowComments = false }) {
     }
   };
 
-  /* ===== Delete post ===== */
   const handleDelete = async () => {
     if (!window.confirm("Bạn có chắc muốn xóa bài viết này không?")) return;
-
     try {
       await api.delete(`/posts/${post.id}/delete/`);
       window.location.reload();
@@ -81,9 +70,11 @@ export default function PostItem({ post, defaultShowComments = false }) {
     }
   };
 
+  const imageCount = post.images.length;
+
   return (
     <div style={box}>
-      {/* ===== Header ===== */}
+      {/* Header */}
       <div style={header}>
         <div style={{ display: "flex", gap: 10 }}>
           <img
@@ -92,7 +83,6 @@ export default function PostItem({ post, defaultShowComments = false }) {
             style={avatar}
             onClick={goToProfile}
           />
-
           <div>
             <strong style={username} onClick={goToProfile}>
               {post.author.username}
@@ -101,7 +91,6 @@ export default function PostItem({ post, defaultShowComments = false }) {
           </div>
         </div>
 
-        {/* ===== MORE BUTTON ===== */}
         {post.is_owner && (
           <div style={{ position: "relative" }}>
             <i
@@ -112,24 +101,19 @@ export default function PostItem({ post, defaultShowComments = false }) {
                 setShowMenu((prev) => !prev);
               }}
             />
-
             {showMenu && (
               <div style={menu}>
                 <div
                   style={menuItem}
                   onClick={() => {
-                    setEditContent(post.content); // reset content
+                    setEditContent(post.content);
                     setShowEditModal(true);
                     setShowMenu(false);
                   }}
                 >
                   Chỉnh sửa
                 </div>
-
-                <div
-                  style={{ ...menuItem, color: "#ef4444" }}
-                  onClick={handleDelete}
-                >
+                <div style={{ ...menuItem, color: "#ef4444" }} onClick={handleDelete}>
                   Xóa
                 </div>
               </div>
@@ -138,43 +122,51 @@ export default function PostItem({ post, defaultShowComments = false }) {
         )}
       </div>
 
-      {/* ===== Content ===== */}
+      {/* Content */}
       <p style={{ ...content, cursor: "pointer" }} onClick={openDetail}>
         {post.content}
       </p>
 
-      {/* ===== Images ===== */}
-      {post.images.length > 0 && (
-        <div style={imageGrid}>
-          {post.images.map((img) => (
-            <img
-              key={img.id}
-              src={img.image}
-              alt=""
-              style={gridImage}
-              onClick={openDetail}
-            />
-          ))}
-        </div>
-      )}
+      {/* ✅ Images */}
+      {imageCount > 0 && (
+  <div style={{
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 4,
+    marginTop: 12,
+    alignItems: "flex-start",
+  }}>
+    {post.images.map((img) => (
+      <img
+        key={img.id}
+        src={img.image}
+        alt=""
+        style={{
+          width: imageCount === 1 ? "100%" : "calc(50% - 2px)",
+          maxWidth: imageCount === 1 ? 420 : "calc(50% - 2px)",
+          aspectRatio: imageCount === 1 ? "auto" : "1 / 1",  
+          height: imageCount === 1 ? "auto" : undefined,
+          objectFit: imageCount === 1 ? "contain" : "cover", 
+          display: "block",
+          cursor: "pointer",
+          borderRadius: 10,
+        }}
+        onClick={openDetail}
+      />
+    ))}
+  </div>
+)}
 
-      {/* ===== Actions ===== */}
+      {/* Actions */}
       <div style={actions}>
         <span onClick={handleLike} style={likeBtn}>
           <i
             className="bi bi-heart-fill"
-            style={{
-              color: liked ? "#ef4444" : "#b8b8b8",
-              fontSize: 18,
-            }}
+            style={{ color: liked ? "#ef4444" : "#b8b8b8", fontSize: 18 }}
           />
           <span>{likes}</span>
         </span>
-
-        <span
-          onClick={() => setShowComments(!showComments)}
-          style={commentBtn}
-        >
+        <span onClick={() => setShowComments(!showComments)} style={commentBtn}>
           <i className="bi bi-chat" />
           <span>{post.comments.length}</span>
         </span>
@@ -182,7 +174,6 @@ export default function PostItem({ post, defaultShowComments = false }) {
 
       {showComments && <CommentList comments={post.comments} />}
 
-      {/* ===== EDIT MODAL ===== */}
       {showEditModal && (
         <EditPostModal
           post={post}
@@ -197,7 +188,6 @@ export default function PostItem({ post, defaultShowComments = false }) {
   );
 }
 
-/* ===== styles ===== */
 const box = {
   background: "#fff",
   padding: 18,
@@ -205,95 +195,22 @@ const box = {
   marginBottom: 20,
   boxShadow: "0 4px 14px rgba(0,0,0,0.06)",
 };
-
-const header = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginBottom: 6,
-};
-
-const avatar = {
-  width: 40,
-  height: 40,
-  borderRadius: "50%",
-  objectFit: "cover",
-  cursor: "pointer",
-};
-
-const username = {
-  fontWeight: 600,
-  fontSize: 14,
-  cursor: "pointer",
-};
-
-const time = {
-  fontSize: 12,
-  color: "#65676b",
-};
-
-const content = {
-  marginTop: 6,
-  lineHeight: 1.6,
-  fontSize: 15,
-};
-
-const imageGrid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
-  gap: 10,
-  marginTop: 12,
-};
-
-const gridImage = {
-  width: "100%",
-  maxHeight: 320,
-  objectFit: "contain",
-  borderRadius: 12,
-};
-
-const actions = {
-  display: "flex",
-  gap: 20,
-  marginTop: 12,
-};
-
-const likeBtn = {
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  cursor: "pointer",
-};
-
-const commentBtn = {
-  display: "flex",
-  alignItems: "center",
-  gap: 6,
-  cursor: "pointer",
-};
-
-const moreBtn = {
-  cursor: "pointer",
-  fontSize: 18,
-};
-
+const header = { display: "flex", justifyContent: "space-between", marginBottom: 6 };
+const avatar = { width: 40, height: 40, borderRadius: "50%", objectFit: "cover", cursor: "pointer" };
+const username = { fontWeight: 600, fontSize: 14, cursor: "pointer" };
+const time = { fontSize: 12, color: "#65676b" };
+const content = { marginTop: 6, lineHeight: 1.6, fontSize: 15 };
+const actions = { display: "flex", gap: 20, marginTop: 12 };
+const likeBtn = { display: "flex", alignItems: "center", gap: 6, cursor: "pointer" };
+const commentBtn = { display: "flex", alignItems: "center", gap: 6, cursor: "pointer" };
+const moreBtn = { cursor: "pointer", fontSize: 18 };
 const menu = {
-  position: "absolute",
-  top: 28,
-  right: 0,
-  minWidth: 140,
-  background: "#fff",
-  borderRadius: 10,
-  boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-  overflow: "hidden",
-  zIndex: 100,
+  position: "absolute", top: 28, right: 0, minWidth: 140,
+  background: "#fff", borderRadius: 10,
+  boxShadow: "0 8px 24px rgba(0,0,0,0.12)", overflow: "hidden", zIndex: 100,
 };
-
 const menuItem = {
-  padding: "10px 14px",
-  fontSize: 14,
-  display: "flex",
-  alignItems: "center",
-  gap: 10,
-  cursor: "pointer",
-  transition: "background 0.2s",
+  padding: "10px 14px", fontSize: 14,
+  display: "flex", alignItems: "center", gap: 10,
+  cursor: "pointer", transition: "background 0.2s",
 };

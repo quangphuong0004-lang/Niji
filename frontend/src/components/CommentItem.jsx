@@ -1,11 +1,12 @@
 import defaultAvatar from "../assets/default_avt.jpg";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
+import api from "../services/api";
 
 function timeAgo(dateString) {
   const now = new Date();
   const past = new Date(dateString);
-  const diff = Math.floor((now - past) / 1000); 
-  
+  const diff = Math.floor((now - past) / 1000);
 
   if (diff < 5) return "Vừa xong";
   if (diff < 60) return `${diff} giây trước`;
@@ -17,21 +18,57 @@ function timeAgo(dateString) {
   if (hours < 24) return `${hours} giờ trước`;
 
   const days = Math.floor(hours / 24);
-  if (days < 7) return `${days} ngày trước`;
-
-  const weeks = Math.floor(days / 7);
-  if (weeks < 4) return `${weeks} tuần trước`;
+  if (days < 30) return `${days} ngày trước`;  
 
   const months = Math.floor(days / 30);
-  if (months < 12) return `${months} tháng trước`;
+  if (months < 12) return `${months} tháng trước`;  
 
   const years = Math.floor(days / 365);
   return `${years} năm trước`;
 }
 
 export default function CommentItem({ comment }) {
-  const isReply = Boolean(comment.parent);
+  if (!comment || !comment.user) return null; // ✅ tránh crash khi data lỗi
+
   const navigate = useNavigate();
+  const { id: postId } = useParams();
+  const isReply = Boolean(comment.parent);
+
+  const [openMenu, setOpenMenu] = useState(false);
+  const [showReply, setShowReply] = useState(false);
+  const [replyText, setReplyText] = useState("");
+
+  /* ===== DELETE ===== */
+  const handleDelete = async () => {
+    if (!window.confirm("Bạn có chắc muốn xóa bình luận này?")) return;
+
+    try {
+      await api.delete(`/posts/comment/${comment.id}/delete/`);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Không thể xóa bình luận");
+    }
+  };
+
+  /* ===== REPLY ===== */
+  const handleReply = async () => {
+    if (!replyText.trim() || !postId) return;
+
+    try {
+      await api.post(`/posts/${postId}/comment/`, {
+        content: replyText.trim(),
+        parent: comment.id,
+      });
+
+      setReplyText("");
+      setShowReply(false);
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert("Không thể trả lời");
+    }
+  };
 
   return (
     <div style={{ ...commentWrap, marginLeft: isReply ? 36 : 0 }}>
@@ -41,34 +78,76 @@ export default function CommentItem({ comment }) {
         <img
           src={comment.user.avatar_url || defaultAvatar}
           alt=""
-          style={{ ...avatar, cursor: "pointer" }}
+          style={avatar}
           onClick={() => navigate(`/users/${comment.user.username}`)}
         />
 
         <div style={commentContent}>
           <div style={header}>
-            <span
-              style={{ ...username, cursor: "pointer" }}
+            <strong
+              style={{ cursor: "pointer" }}
               onClick={() => navigate(`/users/${comment.user.username}`)}
             >
               {comment.user.username}
-            </span>
+            </strong>
 
-            <span style={time}>
-              {timeAgo(comment.created_at)}
-            </span>
+            <span style={time}>{timeAgo(comment.created_at)}</span>
+
+            {comment.is_owner && (
+              <span style={dots} onClick={() => setOpenMenu((v) => !v)}>
+                ⋯
+              </span>
+            )}
+
+            {openMenu && (
+              <div style={menu}>
+                <div style={menuItem} onClick={handleDelete}>
+                  Xóa
+                </div>
+              </div>
+            )}
           </div>
 
           <p style={text}>{comment.content}</p>
+
+          {/* ===== REPLY BUTTON ===== */}
+          <span
+            style={{
+              ...replyBtn,
+              marginLeft: isReply ? 6 : 0, 
+              fontSize: isReply ? 12 : 13,
+            }}
+            onClick={() => setShowReply((v) => !v)}
+          >
+            Trả lời
+          </span>
+
+          {showReply && (
+            <div style={replyBox}>
+              <input
+                style={replyInput}
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+                placeholder="Viết trả lời..."
+              />
+              <button
+                style={replySend}
+                disabled={!replyText.trim()}
+                onClick={handleReply}
+              >
+                Gửi
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Replies */}
-      <div style={{ marginTop: 8 }}>
-        {(comment.replies || []).map(r => (
-          <CommentItem key={r.id} comment={r} />
-        ))}
-      </div>
+      {/* ===== CHILD REPLIES ===== */}
+      {(comment.replies || []).map((r) => (
+        <div key={r.id} style={{ marginTop: 8 }}>
+          <CommentItem comment={r} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -110,12 +189,6 @@ const header = {
   marginBottom: 4,
 };
 
-const username = {
-  fontSize: 13,
-  fontWeight: 600,
-  color: "#050505",
-};
-
 const time = {
   fontSize: 12,
   color: "#65676b",
@@ -137,4 +210,63 @@ const replyLine = {
   width: 2,
   background: "#d0d3d8",
   borderRadius: 2,
+};
+
+/* ===== MENU STYLES ===== */
+
+const dots = {
+  cursor: "pointer",
+  fontSize: 18,
+  padding: "0 6px",
+  userSelect: "none",
+};
+
+const menu = {
+  position: "absolute",
+  top: 22,
+  right: 0,
+  background: "#fff",
+  borderRadius: 8,
+  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+  overflow: "hidden",
+  zIndex: 10,
+};
+
+const menuItem = {
+  padding: "8px 14px",
+  fontSize: 14,
+  cursor: "pointer",
+  color: "#e41e3f",
+};
+
+const replyBtn = {
+  fontSize: 13,
+  color: "#65676b",
+  cursor: "pointer",
+  marginTop: 6,
+  display: "inline-block",
+};
+
+/* ===== REPLY INPUT ===== */
+const replyBox = {
+  display: "flex",
+  gap: 6,
+  marginTop: 6,
+};
+
+const replyInput = {
+  flex: 1,
+  padding: "6px 10px",
+  borderRadius: 16,
+  border: "1px solid #ccd0d5",
+  outline: "none",
+};
+
+const replySend = {
+  padding: "6px 12px",
+  borderRadius: 16,
+  border: "none",
+  background: "#1877f2",
+  color: "#fff",
+  cursor: "pointer",
 };

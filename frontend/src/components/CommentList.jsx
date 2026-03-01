@@ -1,6 +1,6 @@
 import CommentItem from "./CommentItem";
 
-export default function CommentList({ comments }) {
+export default function CommentList({ comments, onDelete  }) {
   if (!comments || comments.length === 0) {
     return (
       <div style={empty}>
@@ -12,7 +12,11 @@ export default function CommentList({ comments }) {
   return (
     <div style={commentWrapper}>
       {comments.map(c => (
-        <CommentItem key={c.id} comment={c} />
+        <CommentItem
+          key={c.id}
+          comment={c}
+          onDelete={onDelete}
+        />
       ))}
     </div>
   );

@@ -6,14 +6,13 @@ import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/Edit_profile";
 import SearchPage from "./pages/SearchPage";
-
-import ProtectedRoute from "./router/ProtectedRoute";
-import MainLayout from "./layouts/MainLayout";
 import FollowersPage from "./pages/FollowersPage";
 import FollowingPage from "./pages/FollowingPage";
 import CreatePost from "./pages/CreatePost";
 import PostDetailPage from "./pages/PostDetailPage";
 
+import ProtectedRoute from "./router/ProtectedRoute";
+import MainLayout from "./layouts/MainLayout";
 
 function App() {
   return (
@@ -31,16 +30,17 @@ function App() {
         }
       >
         <Route path="/" element={<Home />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/edit" element={<EditProfile />} />
-        <Route path="/search" element={<SearchPage />} />
-        <Route path="/users/:username" element={<Profile />} />
-        <Route path="/followers/:username" element={<FollowersPage />} />
-        <Route path="/following/:username" element={<FollowingPage />} />
-        <Route path="/create" element={<CreatePost />} />
-        <Route path="/posts/:id" element={<PostDetailPage />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="profile/edit" element={<EditProfile />} />
+        <Route path="search" element={<SearchPage />} />
+        <Route path="users/:username" element={<Profile />} />
+        <Route path="followers/:username" element={<FollowersPage />} />
+        <Route path="following/:username" element={<FollowingPage />} />
+        <Route path="create" element={<CreatePost />} />
+        <Route path="posts/:id" element={<PostDetailPage />} />
       </Route>
 
+      {/* Fallback */}
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

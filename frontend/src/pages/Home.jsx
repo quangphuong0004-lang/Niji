@@ -2,23 +2,19 @@ import { useEffect, useState, useRef } from "react";
 import api from "../services/api";
 import PostItem from "../components/PostItem";
 
+const SCROLL_KEY = "home_scroll_pos";
+
 export default function Home() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
   const [showTabs, setShowTabs] = useState(true);
-
   const lastScrollY = useRef(0);
 
   const loadPosts = async (currentTab = tab) => {
     try {
       setLoading(true);
-
-      const url =
-        currentTab === "feed"
-          ? "/posts/feed/"
-          : "/posts/";
-
+      const url = currentTab === "feed" ? "/posts/feed/" : "/posts/";
       const res = await api.get(url);
       setPosts(res.data);
     } catch (err) {
@@ -33,27 +29,32 @@ export default function Home() {
     loadPosts(tab);
   }, [tab]);
 
+  // ✅ Khôi phục scroll sau khi load xong
   useEffect(() => {
-  const handleScroll = () => {
-    const currentScroll = window.scrollY;
-
-    if (currentScroll > lastScrollY.current) {
-      setShowTabs(false);
-    } else {
-      setShowTabs(true);
+    if (!loading) {
+      const saved = sessionStorage.getItem(SCROLL_KEY);
+      if (saved) {
+        setTimeout(() => {
+          window.scrollTo({ top: parseInt(saved), behavior: "instant" });
+          sessionStorage.removeItem(SCROLL_KEY);
+        }, 50);
+      }
     }
+  }, [loading]);
 
-    lastScrollY.current = currentScroll;
-  };
-
-  window.addEventListener("scroll", handleScroll, { passive: true });
-  return () => window.removeEventListener("scroll", handleScroll);
-}, []);
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      setShowTabs(currentScroll <= lastScrollY.current);
+      lastScrollY.current = currentScroll;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <div style={styles.wrapper}>
       <div style={styles.feed}>
-
         <div
           style={{
             ...styles.tabsWrapper,
@@ -64,20 +65,13 @@ export default function Home() {
           <div style={styles.tabs}>
             <div
               onClick={() => setTab("all")}
-              style={{
-                ...styles.tab,
-                ...(tab === "all" ? styles.activeTab : {}),
-              }}
+              style={{ ...styles.tab, ...(tab === "all" ? styles.activeTab : {}) }}
             >
               Dành cho bạn
             </div>
-
             <div
               onClick={() => setTab("feed")}
-              style={{
-                ...styles.tab,
-                ...(tab === "feed" ? styles.activeTab : {}),
-              }}
+              style={{ ...styles.tab, ...(tab === "feed" ? styles.activeTab : {}) }}
             >
               Đang theo dõi
             </div>
@@ -86,7 +80,6 @@ export default function Home() {
 
         <div style={styles.posts}>
           {loading && <p>Đang tải bài viết...</p>}
-
           {!loading && posts.length === 0 && (
             <p style={{ color: "#777" }}>
               {tab === "feed"
@@ -94,7 +87,6 @@ export default function Home() {
                 : "Chưa có bài viết nào"}
             </p>
           )}
-
           {posts.map((post) => (
             <PostItem
               key={post.id}
@@ -103,7 +95,6 @@ export default function Home() {
             />
           ))}
         </div>
-
       </div>
     </div>
   );
@@ -117,7 +108,6 @@ const styles = {
     justifyContent: "center",
     width: "100%",
   },
-
   feed: {
     width: "100%",
     maxWidth: 720,
@@ -126,13 +116,11 @@ const styles = {
     borderRadius: 24,
     boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
   },
-
   tabsWrapper: {
     position: "relative",
     transition: "all 0.25s ease",
     marginBottom: 16,
   },
-
   tabs: {
     display: "flex",
     justifyContent: "center",
@@ -140,7 +128,6 @@ const styles = {
     padding: 6,
     background: "#fff",
   },
-
   tab: {
     cursor: "pointer",
     fontWeight: 600,
@@ -150,12 +137,10 @@ const styles = {
     color: "#555",
     transition: "0.25s",
   },
-
   activeTab: {
     background: "#000",
     color: "#fff",
   },
-
   posts: {
     transition: "0.25s",
   },

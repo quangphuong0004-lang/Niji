@@ -20,11 +20,15 @@ export default function Navbar() {
     localStorage.removeItem("refresh");
     navigate("/login");
   };
+  
 
   return (
     <nav style={styles.nav}>
       {/* Logo */}
-      <div style={styles.left} onClick={() => navigate("/")}>
+      <div style={styles.left} onClick={() => {
+        sessionStorage.removeItem("home_scroll_pos");
+        window.location.href = "/";
+      }}>
         <img src={logo} alt="Niji logo" style={styles.logoImg} />
 
       </div>
